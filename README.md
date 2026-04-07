@@ -1,4 +1,8 @@
 npm run dev
+
+# .env
+REDIS_URL="rediss://default:YourSuperSecretPassword@your-remote-redis-host.com:6380"
+
 npm install @aws-sdk/client-cognito-identity-provider
 
 import { CognitoIdentityProviderClient, InitiateAuthCommand } from "@aws-sdk/client-cognito-identity-provider";
