@@ -103,3 +103,62 @@ export async function logout(accessToken: string, logger: any) {
 npm install amazon-cognito-identity-js
 
 npm install amazon-cognito-identity-js @aws-sdk/client-cognito-identity-provider
+
+
+--------------------------------------
+
+
+
+
+
+import { CognitoIdentityProviderClient, InitiateAuthCommand } from "@aws-sdk/client-cognito-identity-provider";
+import { createHmac } from "crypto";
+
+export async function login(userName: string, password: string, logger: any) {
+  // Your enterprise credentials
+  const clientId = "3bglevsacrbnig7b3j5d6ej401";
+  const clientSecret = "1fi5j89ttm34st43baa6nuhn9v9g97922bkqt4b5pk5l95ueecf5";
+  const region = "eu-north-1"; 
+
+  // Calculate the Secret Hash
+  const secretHash = createHmac('sha256', clientSecret)
+    .update(userName + clientId)
+    .digest('base64');
+
+  const client = new CognitoIdentityProviderClient({ region });
+
+  try {
+    logger.info("Initiating Choice-based USER_AUTH flow with upfront password...");
+    
+    const initCommand = new InitiateAuthCommand({
+      AuthFlow: "USER_AUTH",
+      ClientId: clientId,
+      AuthParameters: {
+        USERNAME: userName,
+        PREFERRED_CHALLENGE: "PASSWORD",
+        PASSWORD: password, // <-- AWS was screaming because this was missing!
+        SECRET_HASH: secretHash,
+      },
+    });
+
+    // Send the single request
+    const response = await client.send(initCommand);
+
+    // Because we sent the password upfront, AWS will just log us in immediately
+    if (response.AuthenticationResult?.AccessToken) {
+      logger.info("Login Successful!");
+      return response.AuthenticationResult.AccessToken;
+    } 
+    
+    // Safety net: Just in case your user account has MFA turned on
+    if (response.ChallengeName) {
+      throw new Error(`AWS wants another step: ${response.ChallengeName}`);
+    }
+
+    throw new Error("AWS did not return a token.");
+
+  } catch (error: any) {
+    logger.error("Cognito login rejected", { error: error.message });
+    throw new Error(`AWS Error: ${error.message}`); 
+  }
+}
