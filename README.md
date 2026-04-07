@@ -56,3 +56,50 @@ Mutation: {
       return { token };
     },
   },
+
+  --------------------------
+
+
+  import { CognitoUserPool, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
+import { CognitoIdentityProviderClient, GlobalSignOutCommand } from "@aws-sdk/client-cognito-identity-provider";
+
+const USER_POOL_ID = "eu-north-1_qkvWQ8LIf"; // e.g., eu-north-1_XXXXXXX
+const CLIENT_ID = "4akdrbbrdjh6corela3nmq1s47";
+const REGION = "eu-north-1_qkvWQ8LIf";
+
+export async function login(userName: string, password: string, logger: any) {
+  const userPool = new CognitoUserPool({ UserPoolId: USER_POOL_ID, ClientId: CLIENT_ID });
+  const authenticationDetails = new AuthenticationDetails({ Username: userName, Password: password });
+  const cognitoUser = new CognitoUser({ Username: userName, Pool: userPool });
+
+  return new Promise((resolve, reject) => {
+    logger.info("Calling AWS Cognito via Secure Remote Password (SRP) flow...");
+    cognitoUser.authenticateUser(authenticationDetails, {
+      onSuccess: (result) => resolve(result.getAccessToken().getJwtToken()),
+      onFailure: (err) => {
+        logger.error("Cognito SRP login rejected", { error: err.message });
+        reject(new Error("Invalid username or password"));
+      },
+    });
+  });
+}
+
+export async function logout(accessToken: string, logger: any) {
+  if (!accessToken) return true;
+  const client = new CognitoIdentityProviderClient({ region: REGION });
+  try {
+    logger.info("Revoking token in AWS...");
+    await client.send(new GlobalSignOutCommand({ AccessToken: accessToken }));
+    return true;
+  } catch (error: any) {
+    logger.error("Cognito logout failed", { error: error.message });
+    return true; // Return true so frontend clears state regardless
+  }
+}
+
+
+------------------------------
+
+npm install amazon-cognito-identity-js
+
+npm install amazon-cognito-identity-js @aws-sdk/client-cognito-identity-provider
