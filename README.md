@@ -1,5 +1,5 @@
 npm run dev
-
+npm install @aws-sdk/client-cognito-identity-provider
 
 import { CognitoIdentityProviderClient, InitiateAuthCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { createHmac } from "crypto"; 
