@@ -165,6 +165,28 @@ export async function login(userName: string, password: string, logger: any) {
 -----------------------------------------------------------
 redis -redisClient.ts
 ----------------------
+// src/redisClient.ts
+import { createClient } from 'redis';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+export const redisClient = createClient({
+  url: process.env.REDIS_URL,
+  pingInterval: 1000 * 60 * 3, // Ping every 3 minutes to keep the connection alive
+}); 
+
+redisClient.on('error', (err) => console.error('Remote Redis Error:', err));
+redisClient.on('connect', () => console.log('Successfully connected to Remote Redis!'));
+
+export async function connectRedis() {
+  if (!redisClient.isOpen) {
+    await redisClient.connect();
+  }
+}
+
+
+-----------------------------------
 
 // src/redisClient.ts
 import { createClient } from 'redis';
