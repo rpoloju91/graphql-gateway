@@ -1,3 +1,39 @@
+import { defaultProvider } from "@aws-sdk/credential-provider-node";
+import { SignatureV4 } from "@aws-sdk/signature-v4-multi-region";
+import { Sha256 } from "@aws-crypto/sha256-js";
+
+async function generateIamToken(): Promise<string> {
+  const credentials = await defaultProvider()();
+
+  const signer = new SignatureV4({
+    service: "elasticache",
+    region,
+    credentials,
+    sha256: Sha256,
+  });
+
+  const request = {
+    method: "GET",
+    protocol: "https:",
+    hostname: host,
+    path: "/",
+    query: {
+      Action: "connect",
+      User: "default",
+    },
+    headers: {
+      host: `${host}:${port}`,
+    },
+  };
+
+  const signed = await signer.sign(request);
+
+  // ✅ Build proper token (THIS IS THE FIX)
+  const query = new URLSearchParams(signed.query as any).toString();
+
+  return `${host}:${port}/?${query}`;
+}
+----------------------------------------
 REDIS_HOST=your-redis.xxxxxx.cache.amazonaws.com
 REDIS_PORT=6379
 AWS_REGION=ap-south-1
