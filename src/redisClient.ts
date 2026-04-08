@@ -1,3 +1,34 @@
+REDIS_HOST=your-redis.xxxxxx.cache.amazonaws.com
+REDIS_PORT=6379
+AWS_REGION=ap-south-1
+AWS_CLIENT_ID=xxxxx
+AWS_CLIENT_SECRET=xxxxx
+
+🔹 1. Install Required Packages
+
+Run this:
+
+npm install @aws-sdk/signature-v4 @aws-crypto/sha256-js
+🔹 2. If Still Not Working (Important)
+
+In newer AWS SDK versions, SignatureV4 moved package
+
+👉 Use this instead:
+
+npm install @aws-sdk/signature-v4-multi-region
+🔹 3. Update Import (Recommended Fix)
+
+Replace:
+
+import { SignatureV4 } from "@aws-sdk/signature-v4";
+
+👉 With:
+
+import { SignatureV4 } from "@aws-sdk/signature-v4-multi-region";
+🔹 4. Also Ensure This Installed
+npm install @aws-sdk/credential-provider-node
+
+---------------------------------------------------
 import { createClient, RedisClientType } from "redis";
 import dotenv from "dotenv";
 import { defaultProvider } from "@aws-sdk/credential-provider-node";
