@@ -1,7 +1,3 @@
-Here is how you can implement a **Modular GraphQL Architecture**. We will break your schema and resolvers down into domain-specific folders.
-This approach uses @graphql-tools/merge (standard in modern Apollo/GraphQL setups) which automatically combines types and resolvers, meaning you don't even have to use the extend keyword.
-Here is the recommended folder structure:
-```text
 src/graphql/
 ├── index.ts             # Merges everything together
 ├── base/                # Shared types (JSON, TicketRequest, SessionResponse)
@@ -13,7 +9,7 @@ src/graphql/
 ### 1. Base Module (Shared Types & Utilities)
 This holds the scalar types, generic responses, and shared inputs like TicketRequest that multiple domains rely on.
 **src/graphql/base/typeDefs.ts**
-```typescript
+
 export const baseTypeDefs = `
   scalar JSON 
 
@@ -60,9 +56,8 @@ export const baseTypeDefs = `
   }
 `;
 
-```
 **src/graphql/base/resolvers.ts**
-```typescript
+
 import { sayHello, sayHelloWorld } from "../../../service/helloService";
 
 export const baseResolvers = {
@@ -80,11 +75,12 @@ export const baseResolvers = {
   },
 };
 
-```
 ### 2. Auth Module
+
 Handles everything related to logging in, sessions, and OTPs.
 **src/graphql/auth/typeDefs.ts**
-```typescript
+
+
 export const authTypeDefs = `
   type AuthToken {
     userId: String!
@@ -136,9 +132,9 @@ export const authTypeDefs = `
   }
 `;
 
-```
+
 **src/graphql/auth/resolvers.ts**
-```typescript
+
 import { login, refreshToken } from "../../../service/authService";
 import { sendOtp, verifyOtp } from "../../../service/customerOtpService";
 import { endSession, startSession } from "../../../service/loginSession";
@@ -188,11 +184,10 @@ export const authResolvers = {
   },
 };
 
-```
 ### 3. User & Role Module
 Handles RBAC (Role-Based Access Control) and User Management.
 **src/graphql/user/typeDefs.ts**
-```typescript
+
 export const userTypeDefs = `
   input CreateClientUser {
     email: String!
@@ -244,9 +239,8 @@ export const userTypeDefs = `
   }
 `;
 
-```
 **src/graphql/user/resolvers.ts**
-```typescript
+
 import {
   assignRole,
   createRole,
@@ -309,11 +303,9 @@ export const userResolvers = {
   },
 };
 
-```
 ### 4. Location Module
 Handles all location and billing functionality.
 **src/graphql/location/typeDefs.ts**
-```typescript
 export const locationTypeDefs = `
   input AddLocation {
     type: String!
@@ -370,9 +362,8 @@ export const locationTypeDefs = `
   }
 `;
 
-```
 **src/graphql/location/resolvers.ts**
-```typescript
+
 import {
   addClientLocation, addLocation, getClientLocationBilling, getClientPaymentProvider,
   getLocationDescendents, getLocationFunctions, getLocationPlan, moveLocation,
@@ -440,12 +431,12 @@ export const locationResolvers = {
   },
 };
 
-```
 ### 5. The Merger (index.ts)
 This file gathers all your scattered files, stitches them together seamlessly, and exports the final schema configuration that you can plug right into your Apollo Server setup.
 *Note: You will need the @graphql-tools/merge and optionally @graphql-tools/schema packages installed (npm install @graphql-tools/merge @graphql-tools/schema).*
+
 **src/graphql/index.ts**
-```typescript
+
 import { mergeTypeDefs, mergeResolvers } from "@graphql-tools/merge";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
@@ -478,6 +469,7 @@ export const resolvers = mergeResolvers([
 ]);
 
 // 3. Create the final Executable Schema (Optional, depending on your setup)
+
 export const schema = makeExecutableSchema({
   typeDefs,
   resolvers,
